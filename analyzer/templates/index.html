@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Code Analyzer{% endblock %}
+
+{% block content %}
+<header class="hero">
+    <h1>Code Analyzer</h1>
+    <p>Paste messy code, say what you want improved, and get a clearer optimized version with plain-English feedback.</p>
+</header>
+
+<section class="panel">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="field">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Slow sum of evens">
+        </div>
+
+        <div class="field">
+            <label for="language">Code language</label>
+            <input type="text" id="language" name="language" value="python" placeholder="e.g. python, javascript, java">
+        </div>
+
+        <div class="field">
+            <label for="purpose">Purpose</label>
+            <textarea id="purpose" name="purpose" placeholder="e.g. make this faster and cleaner"></textarea>
+        </div>
+
+        <div class="field">
+            <label for="code">Code</label>
+            <textarea id="code" name="code" class="code-input" placeholder="Paste your code here..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Analyze with Groq</button>
+    </form>
+</section>
+{% endblock %}

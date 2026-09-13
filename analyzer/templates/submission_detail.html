@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{ submission.title|default:"Session" }} · Code Analyzer{% endblock %}
+
+{% block content %}
+<header class="detail-header">
+    <h1>{{ submission.title|default:"Untitled" }}</h1>
+    <div class="meta">
+        <span class="chip">{{ submission.language }}</span>
+    </div>
+    <p style="margin: 14px 0 0; color: var(--muted);">{{ submission.purpose }}</p>
+</header>
+
+<section class="panel section">
+    <h2>Your code</h2>
+    <pre>{{ submission.code }}</pre>
+</section>
+
+<section class="panel section feedback-box">
+    <h2>Feedback</h2>
+    <pre>{{ submission.analysis_result.feedback }}</pre>
+</section>
+
+<div class="actions">
+    <a class="btn btn-ghost" href="{% url 'submission_list' %}">Back to sessions</a>
+    <form action="{% url 'delete_submission' submission.pk %}" method="post" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Delete session</button>
+    </form>
+</div>
+{% endblock %}

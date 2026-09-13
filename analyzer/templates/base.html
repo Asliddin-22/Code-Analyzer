@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Code Analyzer{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #10233a;
+            --muted: #5a6b7d;
+            --line: rgba(16, 35, 58, 0.12);
+            --panel: rgba(255, 255, 255, 0.78);
+            --panel-solid: #ffffff;
+            --accent: #0e7c6b;
+            --accent-deep: #0a5c50;
+            --danger: #b42318;
+            --danger-soft: #fff1f0;
+            --code-bg: #0f1c2e;
+            --code-ink: #d7e6f5;
+            --shadow: 0 18px 50px rgba(16, 35, 58, 0.08);
+            --radius: 18px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: "Outfit", sans-serif;
+            background:
+                radial-gradient(1200px 600px at 10% -10%, rgba(14, 124, 107, 0.18), transparent 55%),
+                radial-gradient(900px 500px at 100% 0%, rgba(47, 108, 168, 0.16), transparent 50%),
+                linear-gradient(165deg, #e8eef4 0%, #f4f7fa 45%, #e9f3f0 100%);
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.35;
+            background-image:
+                linear-gradient(rgba(16, 35, 58, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 35, 58, 0.03) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 85%);
+        }
+
+        .shell {
+            position: relative;
+            width: min(980px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 36px 0 64px;
+            animation: rise 0.55s ease both;
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes softPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(14, 124, 107, 0.0); }
+            50% { box-shadow: 0 0 0 6px rgba(14, 124, 107, 0.08); }
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            font-family: "Syne", sans-serif;
+            font-weight: 800;
+            font-size: 1.05rem;
+            letter-spacing: -0.03em;
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        .brand span { color: var(--accent); }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-deep);
+            background: rgba(14, 124, 107, 0.08);
+        }
+
+        .hero {
+            margin-bottom: 28px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-family: "Syne", sans-serif;
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            font-weight: 800;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 34rem;
+            color: var(--muted);
+            font-size: 1.08rem;
+            line-height: 1.55;
+        }
+
+        .panel {
+            background: var(--panel);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px;
+        }
+
+        label {
+            display: block;
+            margin: 0 0 8px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .field { margin-bottom: 18px; }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: var(--panel-solid);
+            color: var(--ink);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: rgba(14, 124, 107, 0.55);
+            box-shadow: 0 0 0 4px rgba(14, 124, 107, 0.12);
+        }
+
+        textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        textarea.code-input {
+            min-height: 240px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            background: #f7fafc;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 12px 18px;
+            text-decoration: none;
+            transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+            color: #fff;
+            animation: softPulse 2.8s ease-in-out infinite;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.05);
+        }
+
+        .btn-danger {
+            background: var(--danger-soft);
+            color: var(--danger);
+            border: 1px solid rgba(180, 35, 24, 0.2);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--line);
+        }
+
+        .session-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .session-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            text-decoration: none;
+            color: inherit;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 8px 24px rgba(16, 35, 58, 0.04);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            animation: rise 0.5s ease both;
+        }
+
+        .session-row:hover {
+            transform: translateY(-2px);
+            border-color: rgba(14, 124, 107, 0.35);
+            box-shadow: 0 14px 34px rgba(16, 35, 58, 0.08);
+        }
+
+        .session-row-main {
+            flex: 1;
+            min-width: 0;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .session-row-main:hover h2 {
+            color: var(--accent-deep);
+        }
+
+        .session-row h2 {
+            margin: 0 0 6px;
+            font-family: "Syne", sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+        }
+
+        .session-row p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .session-row-actions {
+            flex-shrink: 0;
+        }
+
+        .session-row-actions .btn {
+            margin-top: 0;
+            padding: 8px 12px;
+            font-size: 0.88rem;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0 0;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: rgba(14, 124, 107, 0.1);
+            color: var(--accent-deep);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .detail-header {
+            margin-bottom: 22px;
+        }
+
+        .detail-header h1 {
+            margin: 0 0 10px;
+            font-family: "Syne", sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            letter-spacing: -0.03em;
+        }
+
+        .section {
+            margin-top: 18px;
+        }
+
+        .section h2 {
+            margin: 0 0 10px;
+            font-family: "Syne", sans-serif;
+            font-size: 1.05rem;
+            letter-spacing: -0.02em;
+        }
+
+        pre {
+            margin: 0;
+            padding: 18px;
+            border-radius: 14px;
+            background: var(--code-bg);
+            color: var(--code-ink);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.84rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .feedback-box pre {
+            background: #132536;
+        }
+
+        .actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 42px 20px;
+            color: var(--muted);
+        }
+
+        .empty a {
+            color: var(--accent-deep);
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .shell { width: min(100% - 24px, 980px); padding-top: 24px; }
+            .panel { padding: 20px; }
+            .nav { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <nav class="nav">
+            <a class="brand" href="{% url 'index' %}">Code <span>Analyzer</span></a>
+            <div class="nav-links">
+                <a href="{% url 'index' %}">New analysis</a>
+                <a href="{% url 'submission_list' %}">Sessions</a>
+            </div>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

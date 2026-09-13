@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}All Sessions · Code Analyzer{% endblock %}
+
+{% block content %}
+<header class="hero">
+    <h1>Sessions</h1>
+    <p>Your saved analyses. Open one to read the full feedback and optimized code.</p>
+</header>
+
+{% if submissions %}
+    <div class="session-list">
+        {% for submission in submissions %}
+            <div class="session-row" style="animation-delay: {{ forloop.counter0 }}0ms">
+                <a class="session-row-main" href="{% url 'submission_detail' submission.pk %}">
+                    <h2>{{ submission.title|default:"Untitled" }}</h2>
+                    <p>{{ submission.purpose|default:"No purpose given." }}</p>
+                    <div class="meta">
+                        <span class="chip">{{ submission.language }}</span>
+                    </div>
+                </a>
+                <div class="session-row-actions">
+                    <form action="{% url 'delete_submission' submission.pk %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <section class="panel empty">
+        <p>No sessions yet.</p>
+        <p><a href="{% url 'index' %}">Analyze your first snippet</a></p>
+    </section>
+{% endif %}
+{% endblock %}
